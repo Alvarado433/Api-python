@@ -8,7 +8,7 @@ from Banco.banco import db
 from Banco.conexao import MySQLConfig
 # Importando o modelo após a inicialização do db
 from models.Usuarios import Usuarios
-
+from loguru import logger
 # Inicializando a aplicação
 app = Flask(__name__)
 
@@ -28,13 +28,19 @@ def index():
 # Listando todos os usuários (GET)
 @app.route('/usuarios', methods=['GET'])
 def listar():
+    logger.info("Listando todos os usuários")
     usuarios = Usuarios.query.all()  # Pega todos os usuários no banco
     return jsonify([usuario.Dados() for usuario in usuarios]), 200
 
-# Criando um novo usuário (POST)
-@app.route('/usuarios', methods=['POST'])
+
+@app.route('/cadastro', methods=['POST'])
 def criar():
     data = request.get_json()
+
+    # Verificar se o email já está cadastrado
+    if Usuarios.query.filter_by(email=data['email']).first():
+        logger.info("Email já cadastrado no sistema")
+        return jsonify({"message": "Email já cadastrado no sistema"}), 400
 
     # Criar um novo usuário
     usuario = Usuarios(
